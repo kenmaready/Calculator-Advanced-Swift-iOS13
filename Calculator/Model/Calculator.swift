@@ -15,10 +15,9 @@ enum Operation {
     case divide
 }
 
-
-class Calculator {
+struct Calculator {
     var displayString: String = "0"
-    var displayValue: Double {
+    private var displayValue: Double {
         get {
             guard let number = Double(displayString) else {
                 fatalError("Could not convert current display number \(displayString) to a Double.")
@@ -27,15 +26,21 @@ class Calculator {
         }
     }
     
-    var storedValue: Double?
-    var storedOperation: Operation?
-    var binaryOperationInProcess: Bool {
+    private var storedValue: Double?
+    private var storedOperation: Operation?
+    private var binaryOperationInProcess: Bool {
         get {
             return storedValue != nil
         }
     }
+    private var awaitingNewDisplayValue: Bool = false
     
-    func processNumKey(_ key: String) {
+    mutating func processNumKey(_ key: String) {
+        if awaitingNewDisplayValue {
+            displayString = "0"
+            awaitingNewDisplayValue = false
+        }
+        
         if displayString.count >= 13 {
             return
         } else if displayString == "0" && key != "." {
@@ -47,7 +52,7 @@ class Calculator {
         }
     }
     
-    func processUnaryOperator(_ key: String) {
+    mutating func processUnaryOperator(_ key: String) {
         switch key {
         case "AC":
             displayString = "0"
@@ -70,7 +75,7 @@ class Calculator {
         }
     }
     
-    func processBinaryOperator(_ key: String) {
+    mutating func processBinaryOperator(_ key: String) {
         switch key {
         case "÷":
             storedOperation = .divide
@@ -87,7 +92,7 @@ class Calculator {
         displayString = "0"
     }
     
-    func calculate() {
+    mutating private func calculate() {
         var result: Double
         switch storedOperation {
         case .divide:
@@ -103,6 +108,11 @@ class Calculator {
         }
         storedValue = nil
         storedOperation = nil
-        displayString = String(result)
+
+        if floor(result) == result {
+            displayString = String(Int(result))
+        } else {
+            displayString = String(result)            
+        }
     }
 }
